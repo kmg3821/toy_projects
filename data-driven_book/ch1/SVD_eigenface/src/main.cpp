@@ -1,18 +1,17 @@
 #include <iostream>
-#include "utils.h"
 #include <filesystem>
+
+#include "utils.h"
 
 int main()
 {
     auto path = std::filesystem::current_path();
     path.append("data/CroppedYale/");
-    for(const auto& x : std::filesystem::directory_iterator(path))
-    {
-        for(const auto& y : std::filesystem::directory_iterator(x.path()))
-        {
-            std::cout << y.path() << '\n';
-        }
-    }
+    auto X = make_X_from_all(path);
+
+    std::cout << X.rows() << "x" << X.cols() << '\n';
+
+    std::cout << X.topLeftCorner(30,30) << '\n';
 
     //show_image("data/CroppedYale/yaleB01/yaleB01_P00A-005E-10.pgm");
 
