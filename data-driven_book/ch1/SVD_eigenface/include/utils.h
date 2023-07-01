@@ -1,15 +1,19 @@
+#ifndef __UTILS_H__
+#define __UTILS_H__
+
 #include <string>
 
 #include "Eigen/Dense"
 #include "Eigen/SVD"
 
-using SVDResult = Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU>;
+using SVDResult = Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV>;
 
-// X 만드는 함수
 Eigen::MatrixXd make_X_from_all(const std::string);
 
-// 주어진 사진 한장 보여주기
 void show_image(const std::string);
+void show_image(const Eigen::MatrixXd&);
 
 // svd
-SVDResult compute_SVD(const Eigen::MatrixXd);
+SVDResult compute_SVD(const Eigen::MatrixXd&);
+
+#endif
