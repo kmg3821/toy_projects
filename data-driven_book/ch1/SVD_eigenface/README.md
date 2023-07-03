@@ -7,6 +7,10 @@
 <img width="761" alt="eigenfaces" src="https://github.com/kmg3821/toy_projects/assets/52714442/87b2eb77-9cef-4a31-975a-05471fd66bc8">
 
 ## 실행 방법
+data 폴더에 있는 CroppedYale.7z 파일을 압축해제한다.
+
+그리고 다음 명령을 수행한다.
+
 mkdir build <br>
 cd build <br>
 cmake .. <br>
