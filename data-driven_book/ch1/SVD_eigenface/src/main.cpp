@@ -64,9 +64,9 @@ int main()
     U = (((U.array().rowwise() - min_val.array()) * 255.0).rowwise() / (max_val.array() - min_val.array())).eval();
     std::cout << U.rows() << "x" << U.cols() << "\n";
 
-    show_image(avg, "mean.jpg");
+    show_image(avg, "./out/mean.jpg");
     for(int i = 0; i < 10; ++i)
-        show_image(U.col(i), std::to_string(i) + ".jpg");
+        show_image(U.col(i), "./out/" + std::to_string(i) + ".jpg");
     
 
     return 0;
