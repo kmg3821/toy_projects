@@ -1,8 +1,12 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 #include "utils.h"
+
+int img_h = 192;
+int img_w = 168;
 
 int main()
 {
@@ -10,75 +14,59 @@ int main()
     path.append("data/CroppedYale/");
 
     Eigen::MatrixXd U;
+    Eigen::VectorXd avg;
 
-    if(std::filesystem::exists(std::filesystem::path(path).append("Udate.txt")) == false)
+    if(std::filesystem::exists(std::filesystem::path(path).append("Udata")) == false)
     {
         auto X = make_X_from_all(path);
         std::cout << X.rows() << "x" << X.cols() << '\n';
 
-        const auto avg = X.rowwise().mean();
+        avg = X.rowwise().mean();
         std::cout << avg.rows() << "x" << avg.cols() << '\n';
 
         const auto var = X.colwise() - avg;
-        std::cout << var.rows() << "x" << var.cols() << '\n';
 
         std::cout << "comput SVD...\n";
         const auto svd = compute_SVD(var);
         std::cout << "done\n";
         
-        const auto& U = svd.matrixU();
-        //const auto& S = svd.singularValues();
-        //const auto& V = svd.matrixV();
-
+        U = svd.matrixU();
+        //S = svd.singularValues();
+        //V = svd.matrixV();
         std::cout << U.rows() << "x" << U.cols() << '\n';
 
-        std::ofstream file(std::filesystem::path(path).append("Udate.txt"));
-        file << U.rows() << " " << U.cols() << '\n';
-        file << U.transpose();
+        std::ofstream file(std::filesystem::path(path).append("Udata"), std::ios::binary);
+        file << U.cols();
+        file.write(reinterpret_cast<const char*>(U.data()), sizeof(double) * img_h * img_w * U.cols())
+            .write(reinterpret_cast<const char*>(avg.data()), sizeof(double) * img_h * img_w);
         std::cout << "saved\n";
-
-        show_image(U.col(0) * 10000.0);
+        file.close();
     }
     else
     {
-        freopen(std::filesystem::path(path).append("Udate.txt").string().data(), "r", stdin);
-
-        Eigen::MatrixXd U(32256,1);
-
+        std::ifstream file(std::filesystem::path(path).append("Udata"), std::ios::binary);
+        if(!file.is_open())
         {
-            int tmp;
-            std::cin >> tmp >> tmp;
+            std::cout << "fail to open\n";
+            exit(1);
         }
-        
-        for(int i = 0; i < 4; ++i)
-        {
-            for(int i = 0; i < 32256; ++i)
-            {
-                double x;
-                std::cin >> x;
-                U(i,0) = x;
-            }
-        }
-
-        double min_val = U.col(0).minCoeff();
-        double max_val = U.col(0).maxCoeff();
-
-        U = (U.array() - min_val) * 255.0 / (max_val - min_val);
-
-        show_image(U.col(0));
+        int sz;
+        file >> sz;
+        U = Eigen::MatrixXd(img_h * img_w, sz);
+        avg = Eigen::VectorXd(img_h * img_w);
+        file.read(reinterpret_cast<char*>(U.data()), sizeof(double) * img_h * img_w * sz)
+            .read(reinterpret_cast<char*>(avg.data()), sizeof(double) * img_h * img_w);
+        file.close();
     }
 
+    const auto min_val = U.colwise().minCoeff();
+    const auto max_val = U.colwise().maxCoeff();
+    U = (((U.array().rowwise() - min_val.array()) * 255.0).rowwise() / (max_val.array() - min_val.array())).eval();
+    std::cout << U.rows() << "x" << U.cols() << "\n";
 
-    
-
-    // std::cout << U.rows() << "x" << U.cols() << '\n';
-    // std::cout << U.col(0) << "\n";
-
-    //show_image(avg);
-    //show_image(U.col(0) * 10000.0);
-
-    //show_image("data/CroppedYale/yaleB01/yaleB01_P00A-005E-10.pgm");
-
+    show_image(avg, "mean.jpg");
+    for(int i = 0; i < 10; ++i)
+        show_image(U.col(i), std::to_string(i) + ".jpg");
     
 
     return 0;

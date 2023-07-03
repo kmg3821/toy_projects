@@ -6,9 +6,6 @@
 #include "Eigen/Dense"
 #include "Eigen/SVD"
 
-static int img_h;
-static int img_w;
-
 void show_image(const std::string path)
 {
     const cv::Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
@@ -16,18 +13,21 @@ void show_image(const std::string path)
     cv::waitKey(0);
 }
 
-void show_image(const Eigen::MatrixXd& v)
+void show_image(const Eigen::MatrixXd& v, const std::string fn)
 {
-    cv::Mat img(1, 32256, CV_8U);
+    cv::Mat img(1, img_h * img_w, CV_8U);
 
     for(int i = 0; i < v.rows(); ++i)
     {
         img.at<uint8_t>(0,i) = static_cast<uint8_t>(v(i,0));
     }
-    img = img.reshape(0,192);
+    img = img.reshape(0,img_h);
     
+
     cv::imshow("", img);
     cv::waitKey(0);
+
+    if(!fn.empty()) cv::imwrite(fn, img);
 }
 
 Eigen::MatrixXd make_X_from_all(const std::string path)
@@ -38,8 +38,6 @@ Eigen::MatrixXd make_X_from_all(const std::string path)
     {
         if(file.path().extension() != ".pgm") continue;
         cv::Mat img = cv::imread(file.path(), cv::IMREAD_GRAYSCALE);
-        img_h = img.size().height;
-        img_w = img.size().width;
         
         img = img.reshape(0,1);
         cnt++;
@@ -51,7 +49,7 @@ Eigen::MatrixXd make_X_from_all(const std::string path)
             exit(1);
         }
 
-        X.conservativeResize(sz, cnt);
+        X.conservativeResize(img_h * img_w, cnt);
         for(int i = 0; i < sz; ++i)
         {
             X(i, cnt-1) = img.at<uint8_t>(0,i);
